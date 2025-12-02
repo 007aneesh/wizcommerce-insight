@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Clock
 } from "lucide-react";
+import { TriggerConfigModal } from "@/components/TriggerConfigModal";
 
 // TODO: Replace with actual API data
 const mockTriggers = [
@@ -75,6 +76,7 @@ const triggerTypes = [
 
 export default function Triggers() {
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const filteredTriggers =
     selectedType === "all"
@@ -91,7 +93,7 @@ export default function Triggers() {
             Configure automated email triggers and notifications
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setIsModalOpen(true)}>
           <Plus className="h-4 w-4" />
           New Trigger
         </Button>
@@ -248,6 +250,9 @@ export default function Triggers() {
           </TabsContent>
         </Tabs>
       </Card>
+
+      {/* Trigger Configuration Modal */}
+      <TriggerConfigModal open={isModalOpen} onOpenChange={setIsModalOpen} />
     </div>
   );
 }

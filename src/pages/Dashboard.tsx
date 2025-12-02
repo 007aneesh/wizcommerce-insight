@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { TrendingUp, Users, ShoppingCart, Bell, Zap, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, Users, ShoppingCart, Bell, Zap, Package, Eye } from "lucide-react";
+import { CartDrawer } from "@/components/CartDrawer";
 
 // TODO: Replace with actual API data
 const mockStats = [
@@ -10,6 +13,8 @@ const mockStats = [
 ];
 
 export default function Dashboard() {
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -27,15 +32,27 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {mockStats.map((stat) => {
+      {mockStats.map((stat) => {
           const Icon = stat.icon;
+          const isCart = stat.label === "Abandoned Carts";
           return (
             <Card key={stat.label} className="p-6 transition-all hover:shadow-lg">
               <div className="flex items-start justify-between">
-                <div>
+                <div className="flex-1">
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                   <p className="mt-2 text-3xl font-bold">{stat.value}</p>
                   <p className="mt-1 text-sm text-secondary">{stat.change}</p>
+                  {isCart && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 gap-2 text-xs"
+                      onClick={() => setIsCartDrawerOpen(true)}
+                    >
+                      <Eye className="h-3 w-3" />
+                      View Full Cart
+                    </Button>
+                  )}
                 </div>
                 <div className="rounded-lg bg-primary/10 p-3">
                   <Icon className="h-6 w-6 text-primary" />
@@ -84,6 +101,13 @@ export default function Dashboard() {
           </div>
         </Card>
       </div>
+
+      {/* Cart Drawer */}
+      <CartDrawer 
+        open={isCartDrawerOpen} 
+        onOpenChange={setIsCartDrawerOpen}
+        buyerId="BUYER-001"
+      />
     </div>
   );
 }

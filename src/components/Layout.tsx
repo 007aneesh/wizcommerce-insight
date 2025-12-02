@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
@@ -6,8 +6,11 @@ import {
   Bell, 
   Zap, 
   TrendingUp, 
-  ShoppingCart 
+  ShoppingCart,
+  LogOut
 } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+import { toast } from "sonner";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -20,6 +23,14 @@ const navItems = [
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { clearAuth } = useAuthStore();
+
+  const handleLogout = () => {
+    clearAuth();
+    toast.success("Logged out successfully");
+    navigate("/auth");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,8 +57,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Sidebar + Main Content */}
       <div className="flex">
         {/* Sidebar */}
-        <aside className="sticky top-16 h-[calc(100vh-4rem)] w-64 border-r border-border/40 bg-card">
-          <nav className="flex flex-col gap-1 p-4">
+        <aside className="sticky top-16 h-[calc(100vh-4rem)] w-64 border-r border-border/40 bg-card flex flex-col">
+          <nav className="flex flex-col gap-1 p-4 flex-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -69,6 +80,20 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
               );
             })}
           </nav>
+          
+          {/* Logout Button */}
+          <div className="p-4 border-t border-border/40">
+            <button
+              onClick={handleLogout}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
+                "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <LogOut className="h-5 w-5" />
+              Logout
+            </button>
+          </div>
         </aside>
 
         {/* Main Content */}

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Buyers from "./pages/Buyers";
 import Triggers from "./pages/Triggers";
@@ -23,36 +24,66 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={
-            <Layout>
-              <Dashboard />
-            </Layout>
-          } />
-          <Route path="/buyers" element={
-            <Layout>
-              <Buyers />
-            </Layout>
-          } />
-          <Route path="/triggers" element={
-            <Layout>
-              <Triggers />
-            </Layout>
-          } />
-          <Route path="/abandoned-carts" element={
-            <Layout>
-              <AbandonedCarts />
-            </Layout>
-          } />
-          <Route path="/analytics" element={
-            <Layout>
-              <Analytics />
-            </Layout>
-          } />
-          <Route path="/notifications" element={
-            <Layout>
-              <Notifications />
-            </Layout>
-          } />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/buyers"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Buyers />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/triggers"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Triggers />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/abandoned-carts"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AbandonedCarts />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Analytics />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Notifications />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,27 +7,63 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { apiClient, ApiError } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import { userStorage } from "@/lib/userStorage";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, setAuth, setLoading } = useAuthStore();
 
-  // TODO: API Integration - Replace with actual login API call
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoading(true);
     
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email");
-    const password = formData.get("password");
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Login attempt:", { email, password });
+    try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+      
+      const response = await apiClient.login({ email, password });
+      
+      // Store tokens first
+      setAuth(
+        response.token,
+        response.refresh_token,
+        response.is_tenant_selection_required
+      );
+      
+      // Fetch and store user details
+      try {
+        const userDetails = await apiClient.getCurrentUser();
+        userStorage.setUserDetails(userDetails);
+      } catch (error) {
+        console.error("Failed to fetch user details:", error);
+        // Don't block login if user details fetch fails
+        toast.warning("Login successful, but failed to load user details");
+      }
+      
       toast.success("Login successful!");
-      setIsLoading(false);
       navigate("/");
-    }, 1000);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error('Invalid credentials! Please try again.');
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
+      setLoading(false);
+    }
   };
 
   // TODO: API Integration - Replace with actual signup API call
@@ -142,11 +178,6 @@ export default function Auth() {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-6 rounded-lg border border-dashed border-border bg-muted/30 p-4">
-          <p className="text-xs text-muted-foreground">
-            <strong>API Integration Required:</strong> Connect your authentication service to enable real login functionality.
-          </p>
-        </div>
       </Card>
     </div>
   );

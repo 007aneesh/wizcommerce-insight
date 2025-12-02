@@ -1,6 +1,62 @@
 // Type definitions for WizCommerce platform
 // TODO: Sync these types with your backend API schemas
 
+// Buyer API Types
+export interface BuyerOrderDetails {
+  Quote: number;
+  Orders: number;
+  Drafts: number;
+}
+
+export interface BuyerHit {
+  id: string;
+  buyer_name: string;
+  marked_buyer_name: string;
+  system_id: string;
+  reference_id: string;
+  location: string;
+  city: string;
+  state: string;
+  country: string;
+  zipcode: string;
+  total_cart_items: number;
+  total_carts: number;
+  revenue_by_sales: number;
+  order_details: BuyerOrderDetails;
+  [key: string]: unknown; // For dynamic attributes
+}
+
+export interface BuyerSearchRequest {
+  search: string;
+  filters: {
+    id: string[];
+  };
+  sort: unknown[];
+  aggregate: boolean;
+  page_number: number;
+  page_size: number;
+  exclude_ids: string[];
+}
+
+export interface BuyerSearchResponse {
+  message: string;
+  status_code: number;
+  success: boolean;
+  data: {
+    hits: BuyerHit[];
+    facets: Record<string, unknown>;
+    nbPages: number;
+    nbHits: number;
+    page: number;
+    hitsPerPage: number;
+  };
+  paginator: {
+    nbPages: number;
+    nbHits: number;
+  };
+}
+
+// Legacy Buyer interface (for backward compatibility if needed)
 export interface Buyer {
   id: number | string;
   name: string;

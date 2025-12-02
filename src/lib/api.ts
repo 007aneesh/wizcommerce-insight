@@ -1,5 +1,6 @@
 import { getApiUrl, ENDPOINTS } from './constants';
 import { useAuthStore } from '@/store/authStore';
+import type { BuyerSearchRequest, BuyerSearchResponse } from './types';
 
 interface LoginRequest {
   email: string;
@@ -74,8 +75,19 @@ const apiClient = {
       method: 'GET',
     });
   },
+
+  async searchBuyers(payload: BuyerSearchRequest): Promise<BuyerSearchResponse> {
+    return request<BuyerSearchResponse>(ENDPOINTS.BUYERS.SEARCH, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
 };
 
 export { apiClient, ApiError };
-export type { LoginRequest, LoginResponse, UserDetails };
+export type { 
+  LoginRequest, 
+  LoginResponse, 
+  UserDetails,
+};
 

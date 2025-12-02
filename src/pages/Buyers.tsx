@@ -1,55 +1,103 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter, TrendingUp, ShoppingBag, Package, Star, Bell, Users } from "lucide-react";
-
-// TODO: Replace with actual API data from your backend
-const mockBuyers = [
-  {
-    id: 1,
-    name: "Acme Wholesale Co.",
-    email: "orders@acmewholesale.com",
-    totalOrders: 247,
-    avgOrderValue: "$12,450",
-    lastOrder: "2 days ago",
-    status: "active",
-    bestSellers: ["Product A", "Product B", "Product C"],
-    trendingItems: ["Product X", "Product Y"],
-  },
-  {
-    id: 2,
-    name: "Global Distributors LLC",
-    email: "purchasing@globaldist.com",
-    totalOrders: 189,
-    avgOrderValue: "$8,920",
-    lastOrder: "1 week ago",
-    status: "active",
-    bestSellers: ["Product D", "Product E"],
-    trendingItems: ["Product Z"],
-  },
-  {
-    id: 3,
-    name: "Premium Retail Group",
-    email: "buying@premiumretail.com",
-    totalOrders: 156,
-    avgOrderValue: "$15,200",
-    lastOrder: "3 days ago",
-    status: "active",
-    bestSellers: ["Product F", "Product G", "Product H"],
-    trendingItems: ["Product W", "Product V"],
-  },
-];
+import { Search, Filter, TrendingUp, ShoppingBag, Package, Star, Bell, Users, Loader2 } from "lucide-react";
+import { apiClient, ApiError } from "@/lib/api";
+import type { BuyerHit, BuyerSearchResponse } from "@/lib/types";
+import { useDebounce } from "@/hooks/use-debounce";
+import { toast } from "sonner";
 
 export default function Buyers() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBuyer, setSelectedBuyer] = useState<typeof mockBuyers[0] | null>(null);
+  const [selectedBuyer, setSelectedBuyer] = useState<BuyerHit | null>(null);
+  const [buyers, setBuyers] = useState<BuyerHit[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalPages, setTotalPages] = useState(0);
+  
+  const debouncedSearch = useDebounce(searchQuery, 500);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const fetchBuyers = useCallback(async (page: number, search: string, reset: boolean = false) => {
+    try {
+      if (reset) {
+        setIsLoading(true);
+      } else {
+        setIsLoadingMore(true);
+      }
+
+      const response: BuyerSearchResponse = await apiClient.searchBuyers({
+        search: search,
+        filters: {
+          id: [],
+        },
+        sort: [],
+        aggregate: false,
+        page_number: page,
+        page_size: 15,
+        exclude_ids: [],
+      });
+
+      if (reset) {
+        setBuyers(response.data.hits);
+      } else {
+        setBuyers((prev) => [...prev, ...response.data.hits]);
+      }
+
+      setCurrentPage(response.data.page);
+      setTotalPages(response.data.nbPages);
+      setHasMore(response.data.page < response.data.nbPages);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message || "Failed to fetch buyers");
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+      console.error("Error fetching buyers:", error);
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  }, []);
+
+  // Initial load and search
+  useEffect(() => {
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchBuyers(1, debouncedSearch, true);
+  }, [debouncedSearch, fetchBuyers]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+          const nextPage = currentPage + 1;
+          fetchBuyers(nextPage, debouncedSearch, false);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, isLoading, isLoadingMore, currentPage, debouncedSearch, fetchBuyers]);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Buyer Management</h1>
         <p className="mt-2 text-muted-foreground">
@@ -57,156 +105,151 @@ export default function Buyers() {
         </p>
       </div>
 
-      {/* Search & Filter Bar */}
       <Card className="p-4">
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search buyers by name, email, or order history..."
+              placeholder="Search buyers by name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filters
-          </Button>
         </div>
       </Card>
 
-      {/* Buyers Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Buyers List */}
         <div className="space-y-4">
-          {/* TODO: API Integration Point - Replace mockBuyers with actual API call */}
-          {/* Example: const { data: buyers } = useQuery('buyers', fetchBuyers) */}
-          {mockBuyers
-            .filter(
-              (buyer) =>
-                buyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                buyer.email.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .map((buyer) => (
-              <Card
-                key={buyer.id}
-                className={`cursor-pointer p-6 transition-all hover:shadow-lg ${
-                  selectedBuyer?.id === buyer.id ? "border-primary ring-2 ring-primary/20" : ""
-                }`}
-                onClick={() => setSelectedBuyer(buyer)}
-              >
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{buyer.name}</h3>
-                      <p className="text-sm text-muted-foreground">{buyer.email}</p>
+          {isLoading && buyers.length === 0 ? (
+            <Card className="flex items-center justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </Card>
+          ) : buyers.length === 0 ? (
+            <Card className="flex items-center justify-center p-12">
+              <div className="text-center">
+                <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  No buyers found
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <>
+              {buyers.map((buyer) => (
+                <Card
+                  key={buyer.id}
+                  className={`cursor-pointer p-6 transition-all hover:shadow-lg ${
+                    selectedBuyer?.id === buyer.id ? "border-primary ring-2 ring-primary/20" : ""
+                  }`}
+                  onClick={() => setSelectedBuyer(buyer)}
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold">{buyer.buyer_name}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{buyer.location}</p>
+                      </div>
                     </div>
-                    <Badge variant={buyer.status === "active" ? "default" : "secondary"}>
-                      {buyer.status}
-                    </Badge>
-                  </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Total Orders</p>
-                      <p className="text-lg font-semibold">{buyer.totalOrders}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Avg Order</p>
-                      <p className="text-lg font-semibold">{buyer.avgOrderValue}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Last Order</p>
-                      <p className="text-sm font-medium">{buyer.lastOrder}</p>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Quote</p>
+                        <p className="text-lg font-semibold">{buyer.order_details.Quote}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Orders</p>
+                        <p className="text-lg font-semibold">{buyer.order_details.Orders}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Drafts</p>
+                        <p className="text-lg font-semibold">{buyer.order_details.Drafts}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+              
+              <div ref={observerTarget} className="h-4">
+                {isLoadingMore && (
+                  <Card className="flex items-center justify-center p-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </Card>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Buyer Details Panel */}
-        <div className="sticky top-24">
+        <div className="lg:sticky lg:top-20 self-start">
           {selectedBuyer ? (
-            <Card className="p-6">
-              <h2 className="mb-6 text-2xl font-bold">{selectedBuyer.name}</h2>
+            <Card className="p-6 max-h-[calc(100vh-8rem)] flex flex-col">
+              <h2 className="mb-6 text-2xl font-bold flex-shrink-0">{selectedBuyer.buyer_name}</h2>
 
-              <Tabs defaultValue="insights" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+              <Tabs defaultValue="insights" className="w-full flex-1 flex flex-col min-h-0">
+                <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
                   <TabsTrigger value="insights">Insights</TabsTrigger>
                   <TabsTrigger value="orders">Orders</TabsTrigger>
                   <TabsTrigger value="preferences">Preferences</TabsTrigger>
                 </TabsList>
 
+                <div className="flex-1 overflow-y-auto min-h-0">
                 <TabsContent value="insights" className="space-y-6 pt-4">
-                  {/* Best Sellers */}
-                  <div>
-                    <div className="mb-3 flex items-center gap-2">
-                      <Star className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold">Best Sellers for This Buyer</h3>
-                    </div>
-                    <div className="space-y-2">
-                      {/* TODO: API Integration - Fetch buyer's best selling products */}
-                      {selectedBuyer.bestSellers.map((product, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3"
-                        >
-                          <span className="text-sm font-medium">{product}</span>
-                          <Badge variant="secondary">Top {idx + 1}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Trending */}
-                  <div>
-                    <div className="mb-3 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-secondary" />
-                      <h3 className="font-semibold">Trending for This Buyer</h3>
-                    </div>
-                    <div className="space-y-2">
-                      {/* TODO: API Integration - Fetch trending products for buyer */}
-                      {selectedBuyer.trendingItems.map((product, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-3 rounded-lg border border-border bg-muted/50 p-3"
-                        >
-                          <TrendingUp className="h-4 w-4 text-secondary" />
-                          <span className="text-sm font-medium">{product}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Similar Products */}
+                  {/* Order Details */}
                   <div>
                     <div className="mb-3 flex items-center gap-2">
                       <ShoppingBag className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold">Similar to Past Orders</h3>
+                      <h3 className="font-semibold">Order Details</h3>
                     </div>
-                    <div className="rounded-lg border border-dashed border-border p-4 text-center">
-                      <Package className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
-                        API Integration Required
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Connect your product recommendation engine
-                      </p>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3">
+                        <span className="text-sm font-medium">Quotes</span>
+                        <Badge variant="secondary">{selectedBuyer.order_details.Quote}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3">
+                        <span className="text-sm font-medium">Orders</span>
+                        <Badge variant="secondary">{selectedBuyer.order_details.Orders}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3">
+                        <span className="text-sm font-medium">Drafts</span>
+                        <Badge variant="secondary">{selectedBuyer.order_details.Drafts}</Badge>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Frequently Bought Together */}
                   <div>
                     <div className="mb-3 flex items-center gap-2">
                       <Package className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold">Frequently Bought Together</h3>
+                      <h3 className="font-semibold">Location</h3>
                     </div>
-                    <div className="rounded-lg border border-dashed border-border p-4 text-center">
-                      <p className="text-sm text-muted-foreground">
-                        API Integration Required
-                      </p>
+                    <div className="rounded-lg border border-border bg-muted/50 p-4">
+                      <p className="text-sm">{selectedBuyer.location}</p>
+                      <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                        <span>City: {selectedBuyer.city}</span>
+                        <span>State: {selectedBuyer.state}</span>
+                        <span>Zip: {selectedBuyer.zipcode}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-3 flex items-center gap-2">
+                      <Star className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold">Additional Information</h3>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3">
+                        <span className="text-sm font-medium">System ID</span>
+                        <span className="text-sm text-muted-foreground">{selectedBuyer.system_id}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3">
+                        <span className="text-sm font-medium">Reference ID</span>
+                        <span className="text-sm text-muted-foreground">{selectedBuyer.reference_id}</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3">
+                        <span className="text-sm font-medium">Total Carts</span>
+                        <span className="text-sm text-muted-foreground">{selectedBuyer.total_carts}</span>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
@@ -214,7 +257,7 @@ export default function Buyers() {
                 <TabsContent value="orders" className="pt-4">
                   <div className="rounded-lg border border-dashed border-border p-8 text-center">
                     <ShoppingBag className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
-                    <h3 className="mb-2 font-semibold">Past Orders (50-100 Line Items)</h3>
+                    <h3 className="mb-2 font-semibold">Order History</h3>
                     <p className="text-sm text-muted-foreground">
                       Connect to your order management API to display order history
                     </p>
@@ -231,6 +274,7 @@ export default function Buyers() {
                     </div>
                   </div>
                 </TabsContent>
+                </div>
               </Tabs>
             </Card>
           ) : (

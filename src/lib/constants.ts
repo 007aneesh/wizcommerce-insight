@@ -15,6 +15,9 @@ export const ENDPOINTS = {
   USERS: {
     ME: '/users/v1/me',
   },
+  BUYERS: {
+    SEARCH: '/buyer/v2/account/search',
+  },
 } as const;
 
 export const getApiUrl = (endpoint: string): string => {

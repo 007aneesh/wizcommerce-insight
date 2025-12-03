@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, TrendingUp, ShoppingBag, Package, Star, Bell, Users, Loader2 } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api";
-import type { BuyerHit, BuyerSearchResponse } from "@/lib/types";
+import type { BuyerHit, BuyerSearchResponse, OrderData, OrderSearchResponse } from "@/lib/types";
 import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 
@@ -20,8 +20,17 @@ export default function Buyers() {
   const [hasMore, setHasMore] = useState(true);
   const [totalPages, setTotalPages] = useState(0);
   
+  // Orders state
+  const [orders, setOrders] = useState<any[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [isLoadingMoreOrders, setIsLoadingMoreOrders] = useState(false);
+  const [ordersStartRow, setOrdersStartRow] = useState(0);
+  const [ordersEndRow, setOrdersEndRow] = useState(100);
+  const [hasMoreOrders, setHasMoreOrders] = useState(true);
+  
   const debouncedSearch = useDebounce(searchQuery, 500);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const ordersObserverTarget = useRef<HTMLDivElement>(null);
 
   const fetchBuyers = useCallback(async (page: number, search: string, reset: boolean = false) => {
     try {
@@ -72,7 +81,80 @@ export default function Buyers() {
     fetchBuyers(1, debouncedSearch, true);
   }, [debouncedSearch, fetchBuyers]);
 
-  // Infinite scroll observer
+  // Fetch orders for selected buyer
+  const fetchOrders = useCallback(async (buyerId: string, startRow: number, endRow: number, reset: boolean = false) => {
+    try {
+      if (reset) {
+        setIsLoadingOrders(true);
+      } else {
+        setIsLoadingMoreOrders(true);
+      }
+
+      const response: any = await apiClient.searchOrders({
+        startRow,
+        endRow,
+        sortModel: [
+          {
+            colId: 'updated_at',
+            sort: 'desc',
+          },
+        ],
+        filterModel: {
+          created_at_milliseconds: {
+            filterType: 'date',
+            type: 'inRange',
+            filter: null,
+            filterTo: null,
+          },
+          buyer_id: {
+            filterType: 'text',
+            type: 'equals',
+            filter: buyerId,
+          },
+          type: {
+            filterType: 'text',
+            type: 'equals',
+            filter: 'order',
+            filterTo: null,
+          },
+        },
+      });
+
+      if (reset) {
+        setOrders(response.data || []);
+      } else {
+        setOrders((prev) => [...prev, ...(response.data || [])]);
+      }
+
+      // Check if there are more orders
+      const lastRow = response.endRow ?? response.data?.length ?? 0;
+      setHasMoreOrders(lastRow >= endRow);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message || "Failed to fetch orders");
+      } else {
+        toast.error("An unexpected error occurred while fetching orders");
+      }
+      console.error("Error fetching orders:", error);
+    } finally {
+      setIsLoadingOrders(false);
+      setIsLoadingMoreOrders(false);
+    }
+  }, []);
+
+  // Fetch orders when buyer is selected
+  useEffect(() => {
+    if (selectedBuyer) {
+      setOrdersStartRow(0);
+      setOrdersEndRow(100);
+      setHasMoreOrders(true);
+      fetchOrders(selectedBuyer.id, 0, 100, true);
+    } else {
+      setOrders([]);
+    }
+  }, [selectedBuyer, fetchOrders]);
+
+  // Infinite scroll observer for buyers
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -95,6 +177,35 @@ export default function Buyers() {
       }
     };
   }, [hasMore, isLoading, isLoadingMore, currentPage, debouncedSearch, fetchBuyers]);
+
+  // Infinite scroll observer for orders
+  useEffect(() => {
+    if (!selectedBuyer) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMoreOrders && !isLoadingOrders && !isLoadingMoreOrders) {
+          const nextStartRow = ordersEndRow;
+          const nextEndRow = ordersEndRow + 100;
+          setOrdersStartRow(nextStartRow);
+          setOrdersEndRow(nextEndRow);
+          fetchOrders(selectedBuyer.id, nextStartRow, nextEndRow, false);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    const currentTarget = ordersObserverTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMoreOrders, isLoadingOrders, isLoadingMoreOrders, ordersEndRow, selectedBuyer, fetchOrders]);
 
   return (
     <div className="space-y-6">
@@ -255,12 +366,68 @@ export default function Buyers() {
                 </TabsContent>
 
                 <TabsContent value="orders" className="pt-4">
-                  <div className="rounded-lg border border-dashed border-border p-8 text-center">
-                    <ShoppingBag className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
-                    <h3 className="mb-2 font-semibold">Order History</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Connect to your order management API to display order history
-                    </p>
+                  <div className="space-y-4">
+                    {isLoadingOrders && orders.length === 0 ? (
+                      <div className="flex items-center justify-center p-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : orders.length === 0 ? (
+                      <div className="rounded-lg border border-dashed border-border p-8 text-center">
+                        <ShoppingBag className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
+                        <h3 className="mb-2 font-semibold">No Orders Found</h3>
+                        <p className="text-sm text-muted-foreground">
+                          This buyer has no orders yet
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        {orders.map((order) => {
+                          const orderId = order.reference_id || order.id || 'N/A';
+                          const orderValue = order.total_value ?? 0;
+                          const createdOn = order.created_on || order.created_at || 'N/A';
+                          const salesRepName = order.sales_rep_name || 'N/A';
+                          const salesRepEmail = order.sales_rep_email || order.email || 'N/A';
+
+                          return (
+                            <Card key={order.id || orderId} className="p-4">
+                              <div className="space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h4 className="font-semibold">Reference ID: {orderId}</h4>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      Created: {typeof createdOn === 'string' ? new Date(createdOn).toLocaleDateString() : createdOn}
+                                    </p>
+                                  </div>
+                                  <Badge variant="secondary" className="text-sm">
+                                    ${orderValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </Badge>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Sales Rep</p>
+                                    <p className="text-sm font-medium">{salesRepName}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Email</p>
+                                    <p className="text-sm font-medium">{salesRepEmail}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </Card>
+                          );
+                        })}
+                        
+                        {/* Infinite scroll trigger for orders */}
+                        <div ref={ordersObserverTarget} className="h-4">
+                          {isLoadingMoreOrders && (
+                            <Card className="flex items-center justify-center p-4">
+                              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            </Card>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </TabsContent>
 

@@ -56,6 +56,59 @@ export interface BuyerSearchResponse {
   };
 }
 
+// Order/Document Search Types
+export interface SortModel {
+  colId: string;
+  sort: 'asc' | 'desc';
+}
+
+export interface FilterModel {
+  created_at_milliseconds?: {
+    filterType: 'date';
+    type: 'inRange';
+    filter: number | null;
+    filterTo: number | null;
+  };
+  buyer_id?: {
+    filterType: 'text';
+    type: 'equals';
+    filter: string;
+  };
+  type?: {
+    filterType: 'text';
+    type: 'equals';
+    filter: string;
+    filterTo: null;
+  };
+  [key: string]: unknown;
+}
+
+export interface OrderSearchRequest {
+  startRow: number;
+  endRow: number;
+  sortModel: SortModel[];
+  filterModel: FilterModel;
+}
+
+export interface OrderData {
+  id: string;
+  order_id?: string;
+  order_value?: number;
+  created_on?: string;
+  created_at?: string;
+  sales_rep_name?: string;
+  sales_rep_email?: string;
+  email?: string;
+  [key: string]: unknown; // For other fields that might be present
+}
+
+export interface OrderSearchResponse {
+  success: boolean;
+  rows: OrderData[];
+  lastRow?: number;
+  [key: string]: unknown; // For other response fields
+}
+
 // Legacy Buyer interface (for backward compatibility if needed)
 export interface Buyer {
   id: number | string;

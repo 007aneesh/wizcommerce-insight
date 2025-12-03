@@ -1,6 +1,6 @@
 import { getApiUrl, ENDPOINTS } from './constants';
 import { useAuthStore } from '@/store/authStore';
-import type { BuyerSearchRequest, BuyerSearchResponse } from './types';
+import type { BuyerSearchRequest, BuyerSearchResponse, OrderSearchRequest, OrderSearchResponse } from './types';
 
 interface LoginRequest {
   email: string;
@@ -78,6 +78,13 @@ const apiClient = {
 
   async searchBuyers(payload: BuyerSearchRequest): Promise<BuyerSearchResponse> {
     return request<BuyerSearchResponse>(ENDPOINTS.BUYERS.SEARCH, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async searchOrders(payload: OrderSearchRequest): Promise<OrderSearchResponse> {
+    return request<OrderSearchResponse>(ENDPOINTS.DOCUMENTS.SSRM_SEARCH, {
       method: 'POST',
       body: JSON.stringify(payload),
     });

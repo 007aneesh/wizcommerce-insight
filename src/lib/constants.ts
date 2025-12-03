@@ -18,6 +18,9 @@ export const ENDPOINTS = {
   BUYERS: {
     SEARCH: '/buyer/v2/account/search',
   },
+  DOCUMENTS: {
+    SSRM_SEARCH: '/document/v2/ssrm/search',
+  },
 } as const;
 
 export const getApiUrl = (endpoint: string): string => {

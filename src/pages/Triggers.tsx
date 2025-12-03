@@ -24,7 +24,7 @@ const mockTriggers = [
     name: "New Collection Launch",
     type: "collection",
     status: "active",
-    description: "Send email when new collections are launched",
+    description: "Notify buyers when new collections are launched",
     lastTriggered: "2 hours ago",
     triggerCount: 156,
   },
@@ -33,7 +33,7 @@ const mockTriggers = [
     name: "Weekly Buyer Updates",
     type: "scheduled",
     status: "active",
-    description: "Send weekly summaries to all active buyers",
+    description: "Send weekly updates to all active buyers",
     lastTriggered: "3 days ago",
     triggerCount: 1247,
   },
@@ -42,7 +42,7 @@ const mockTriggers = [
     name: "Event Notifications",
     type: "event",
     status: "active",
-    description: "Trigger emails based on specific buyer events",
+    description: "Trigger notifications based on specific buyer events",
     lastTriggered: "1 hour ago",
     triggerCount: 89,
   },
@@ -150,7 +150,7 @@ export default function Triggers() {
                   <div className="flex items-center gap-2 text-sm">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">
-                      {trigger.triggerCount} emails sent
+                      {trigger.triggerCount} notifications sent
                     </span>
                   </div>
                 </div>
@@ -176,12 +176,11 @@ export default function Triggers() {
           <div className="flex-1">
             <h3 className="mb-2 font-semibold">API Integration Required</h3>
             <p className="mb-4 text-sm text-muted-foreground">
-              To enable these triggers, you'll need to connect your email service (e.g., SendGrid, Mailgun) 
-              and configure the following endpoints:
+              To enable these triggers, configure the following endpoints:
             </p>
             <ul className="space-y-1 text-sm text-muted-foreground">
               <li>• POST /api/triggers/collection-launch - New collection notifications</li>
-              <li>• POST /api/triggers/scheduled-email - Regular interval emails</li>
+              <li>• POST /api/triggers/scheduled - Regular interval notifications</li>
               <li>• POST /api/triggers/event - Event-based triggers</li>
               <li>• POST /api/triggers/abandoned-cart - Cart abandonment alerts</li>
               <li>• POST /api/triggers/product-update - Product update notifications</li>
@@ -204,7 +203,6 @@ export default function Triggers() {
               <div className="rounded-lg border border-border p-4">
                 <h3 className="mb-2 font-semibold">Required Buyer Data Fields:</h3>
                 <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>• Buyer email address</li>
                   <li>• Buyer name/company name</li>
                   <li>• Past orders (50-100 line items)</li>
                   <li>• Product preferences/watch list</li>

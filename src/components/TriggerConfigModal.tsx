@@ -55,9 +55,9 @@ const triggerTypes = [
   },
   {
     id: "scheduled",
-    label: "Scheduled Email",
+    label: "Scheduled Notification",
     icon: Calendar,
-    description: "Send regular interval emails to buyer segments",
+    description: "Send regular interval notifications to buyer segments",
     fields: ["schedule", "frequency", "target_segment"],
   },
   {
@@ -178,9 +178,9 @@ export function TriggerConfigModal({ open, onOpenChange }: TriggerConfigModalPro
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">Create New Trigger</DialogTitle>
-          <DialogDescription>
-            Configure automated email triggers for your buyers based on products and events
-          </DialogDescription>
+            <DialogDescription>
+              Configure automated triggers for your buyers based on products and events
+            </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -514,30 +514,7 @@ export function TriggerConfigModal({ open, onOpenChange }: TriggerConfigModalPro
                 </div>
               </div>
 
-              <Separator />
-
-              {/* Email Configuration */}
-              <div className="space-y-4">
-                <h3 className="font-semibold">Email Configuration</h3>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Email Subject Template</Label>
-                  <Input
-                    id="subject"
-                    name="subject"
-                    placeholder="e.g., {{buyer_name}}, Check out our new {{collection_name}}!"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="template">Email Template ID</Label>
-                  <Input
-                    id="template"
-                    name="template"
-                    placeholder="e.g., TMPL-001"
-                  />
-                </div>
-              </div>
+                <Separator />
 
               {/* API Integration Notice */}
               <Card className="border-dashed bg-muted/30 p-4">
@@ -547,7 +524,7 @@ export function TriggerConfigModal({ open, onOpenChange }: TriggerConfigModalPro
                     <p className="text-sm font-medium">API Integration Required</p>
                     <p className="text-xs text-muted-foreground">
                       Connect to <code className="text-primary">POST /api/triggers/create</code> to save trigger configurations.
-                      Required buyer data: email, name, past orders, preferences.
+                      Required buyer data: name, past orders, preferences.
                     </p>
                   </div>
                 </div>

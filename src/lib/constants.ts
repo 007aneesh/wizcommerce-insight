@@ -21,6 +21,10 @@ export const ENDPOINTS = {
   DOCUMENTS: {
     SSRM_SEARCH: '/document/v2/ssrm/search',
   },
+  ENTITY: {
+    CATALOG_LIST: '/entity/v2/product/catalog_list',
+    COLLECTION_SEARCH: '/entity/v3/collection/search',
+  },
 } as const;
 
 export const getApiUrl = (endpoint: string): string => {

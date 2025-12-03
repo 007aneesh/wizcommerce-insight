@@ -109,6 +109,46 @@ export interface OrderSearchResponse {
   [key: string]: unknown; // For other response fields
 }
 
+// Catalog Types
+export interface Catalog {
+  value: string;
+  label: string;
+  is_default: boolean;
+}
+
+export interface CatalogListResponse {
+  message: string;
+  status_code: number;
+  success: boolean;
+  data: Catalog[];
+  paginator: Record<string, unknown>;
+}
+
+// Collection Types
+export interface CollectionMedia {
+  type: 'image' | string;
+  view_type: 'thumbnail' | 'banner' | string;
+  url: string;
+}
+
+export interface CollectionData {
+  id: string;
+  name: string;
+  priority: number;
+  media: CollectionMedia[];
+  website_display_setting: unknown | null;
+  product_count: number;
+  attributes: unknown[];
+}
+
+export interface CollectionSearchResponse {
+  message?: string;
+  status_code?: number;
+  success?: boolean;
+  data: CollectionData[];
+  [key: string]: unknown;
+}
+
 // Legacy Buyer interface (for backward compatibility if needed)
 export interface Buyer {
   id: number | string;

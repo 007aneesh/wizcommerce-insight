@@ -1,6 +1,13 @@
 import { getApiUrl, ENDPOINTS } from './constants';
 import { useAuthStore } from '@/store/authStore';
-import type { BuyerSearchRequest, BuyerSearchResponse, OrderSearchRequest, OrderSearchResponse } from './types';
+import type { 
+  BuyerSearchRequest, 
+  BuyerSearchResponse, 
+  OrderSearchRequest, 
+  OrderSearchResponse,
+  CatalogListResponse,
+  CollectionSearchResponse,
+} from './types';
 
 interface LoginRequest {
   email: string;
@@ -87,6 +94,18 @@ const apiClient = {
     return request<OrderSearchResponse>(ENDPOINTS.DOCUMENTS.SSRM_SEARCH, {
       method: 'POST',
       body: JSON.stringify(payload),
+    });
+  },
+
+  async getCatalogList(): Promise<CatalogListResponse> {
+    return request<CatalogListResponse>(ENDPOINTS.ENTITY.CATALOG_LIST, {
+      method: 'GET',
+    });
+  },
+
+  async searchCollections(catalogId: string): Promise<CollectionSearchResponse> {
+    return request<CollectionSearchResponse>(`${ENDPOINTS.ENTITY.COLLECTION_SEARCH}?catalog_id=${catalogId}`, {
+      method: 'GET',
     });
   },
 };

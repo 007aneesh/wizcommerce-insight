@@ -60,6 +60,11 @@ export const useAuthStore = create<AuthStore>()(
         // Remove user details from localStorage
         userStorage.removeUserDetails();
         
+        // Clear catalog store
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('catalog-storage');
+        }
+        
         // Clear store
         set({
           token: null,

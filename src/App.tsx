@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { CatalogLoader } from "./components/CatalogLoader";
 import Dashboard from "./pages/Dashboard";
 import Buyers from "./pages/Buyers";
 import Triggers from "./pages/Triggers";
@@ -21,6 +22,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <CatalogLoader />
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />

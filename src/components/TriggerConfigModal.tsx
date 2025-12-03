@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,9 +30,15 @@ import {
   Bell,
   AlertCircle,
   Clock,
-  Mail
+  Mail,
+  Upload,
+  X,
+  Image as ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
+import { useCatalogStore } from "@/store/catalogStore";
+import { apiClient, ApiError } from "@/lib/api";
+import type { CollectionData } from "@/lib/types";
 
 interface TriggerConfigModalProps {
   open: boolean;
@@ -45,7 +51,7 @@ const triggerTypes = [
     label: "New Collection Launch",
     icon: Package,
     description: "Notify buyers when new product collections are launched",
-    fields: ["collection_id", "target_segment", "delay"],
+    fields: ["collection_id", "target_segment", "poster_image", "base_prompt"],
   },
   {
     id: "scheduled",
@@ -81,8 +87,65 @@ export function TriggerConfigModal({ open, onOpenChange }: TriggerConfigModalPro
   const [selectedType, setSelectedType] = useState<string>("");
   const [isActive, setIsActive] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [collections, setCollections] = useState<CollectionData[]>([]);
+  const [isLoadingCollections, setIsLoadingCollections] = useState(false);
+  const [selectedCollection, setSelectedCollection] = useState<string>("");
+  const [posterImage, setPosterImage] = useState<File | null>(null);
+  const [posterImagePreview, setPosterImagePreview] = useState<string>("");
 
+  const { selectedCatalog } = useCatalogStore();
   const selectedTriggerType = triggerTypes.find((t) => t.id === selectedType);
+
+  // Fetch collections when collection trigger is selected
+  useEffect(() => {
+    const fetchCollections = async () => {
+      if (selectedType === "collection" && selectedCatalog && collections.length === 0) {
+        try {
+          setIsLoadingCollections(true);
+          const response = await apiClient.searchCollections(selectedCatalog.value);
+          if (response.data) {
+            setCollections(response.data);
+          }
+        } catch (error) {
+          if (error instanceof ApiError) {
+            toast.error("Failed to load collections");
+          }
+          console.error("Error fetching collections:", error);
+        } finally {
+          setIsLoadingCollections(false);
+        }
+      }
+    };
+
+    fetchCollections();
+  }, [selectedType, selectedCatalog, collections.length]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please upload an image file");
+        return;
+      }
+
+      setPosterImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPosterImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setPosterImage(null);
+    setPosterImagePreview("");
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -205,22 +268,112 @@ export function TriggerConfigModal({ open, onOpenChange }: TriggerConfigModalPro
                 {selectedType === "collection" && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="collection_id">Collection ID</Label>
-                      <Input
-                        id="collection_id"
-                        name="collection_id"
-                        placeholder="e.g., COLL-2024-001"
-                      />
+                      <Label htmlFor="collection_id">
+                        Choose Collection <span className="text-destructive">*</span>
+                      </Label>
+                      <Select 
+                        name="collection_id" 
+                        value={selectedCollection}
+                        onValueChange={setSelectedCollection}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={isLoadingCollections ? "Loading collections..." : "Select a collection"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isLoadingCollections ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : collections.length === 0 ? (
+                            <SelectItem value="none" disabled>No collections available</SelectItem>
+                          ) : (
+                            collections.map((collection) => (
+                              <SelectItem key={collection.id} value={collection.id}>
+                                <div className="flex items-center gap-2">
+                                  <Package className="h-4 w-4" />
+                                  <span>{collection.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    ({collection.product_count} products)
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Select the collection to launch
+                      </p>
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="delay">Delay (hours)</Label>
-                      <Input
-                        id="delay"
-                        name="delay"
-                        type="number"
-                        placeholder="0"
-                        defaultValue="0"
+                      <Label htmlFor="base_prompt">
+                        Base Prompt <span className="text-destructive">*</span>
+                      </Label>
+                      <Textarea
+                        id="base_prompt"
+                        name="base_prompt"
+                        placeholder="Enter the base prompt for AI-generated content..."
+                        rows={4}
+                        required
                       />
+                      <p className="text-xs text-muted-foreground">
+                        This prompt will be used to generate personalized content for each buyer
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="poster_image">
+                        Collection Poster Image
+                      </Label>
+                      {posterImagePreview ? (
+                        <div className="relative">
+                          <div className="relative rounded-lg border-2 border-dashed border-border overflow-hidden">
+                            <img
+                              src={posterImagePreview}
+                              alt="Poster preview"
+                              className="w-full h-48 object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={removeImage}
+                              className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            {posterImage?.name} ({(posterImage!.size / 1024).toFixed(2)} KB)
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <input
+                            type="file"
+                            id="poster_image"
+                            name="poster_image"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="poster_image"
+                            className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors"
+                          >
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Upload className="h-10 w-10 text-muted-foreground mb-3" />
+                              <p className="mb-2 text-sm text-muted-foreground">
+                                <span className="font-semibold">Click to upload</span> or drag and drop
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                PNG, JPG or WEBP (MAX. 5MB)
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Upload a poster image for the collection launch (optional)
+                      </p>
                     </div>
                   </>
                 )}

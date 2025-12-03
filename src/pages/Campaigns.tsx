@@ -42,7 +42,7 @@ const mockCampaigns = [
     name: "Event Notifications",
     type: "event",
     status: "active",
-    description: "Trigger notifications based on specific buyer events",
+    description: "Send personalized emails based on specific buyer events",
     lastTriggered: "1 hour ago",
     emailCount: 89,
   },

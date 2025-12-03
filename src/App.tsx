@@ -8,7 +8,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { CatalogLoader } from "./components/CatalogLoader";
 import Dashboard from "./pages/Dashboard";
 import Buyers from "./pages/Buyers";
-import Triggers from "./pages/Triggers";
+import Campaigns from "./pages/Campaigns";
 import AbandonedCarts from "./pages/AbandonedCarts";
 import Analytics from "./pages/Analytics";
 import Notifications from "./pages/Notifications";
@@ -51,7 +51,7 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Layout>
-                  <Triggers />
+                  <Campaigns />
                 </Layout>
               </ProtectedRoute>
             }

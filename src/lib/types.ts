@@ -286,19 +286,19 @@ export interface OrderLineItem {
   sku?: string;
 }
 
-export interface Trigger {
+export interface Campaign {
   id: number | string;
   name: string;
   type: "collection" | "scheduled" | "event" | "cart" | "product";
   status: "active" | "inactive" | "paused";
   description: string;
   lastTriggered?: string;
-  triggerCount: number;
-  config?: TriggerConfig;
+  emailCount: number;
+  config?: CampaignConfig;
 }
 
-export interface TriggerConfig {
-  schedule?: string; // Cron expression for scheduled triggers
+export interface CampaignConfig {
+  schedule?: string; // Cron expression for scheduled campaigns
   eventType?: string;
   conditions?: Record<string, any>;
   emailTemplate?: string;
@@ -391,17 +391,17 @@ export interface PaginatedResponse<T> {
  * - GET /api/buyers/:id/frequently-bought-together - Fetch frequently bought together items
  * - PUT /api/buyers/:id/preferences - Update buyer notification preferences
  * 
- * Triggers:
- * - GET /api/triggers - Fetch all triggers
- * - POST /api/triggers - Create new trigger
- * - PUT /api/triggers/:id - Update trigger
- * - DELETE /api/triggers/:id - Delete trigger
- * - POST /api/triggers/:id/execute - Manually execute trigger
- * - POST /api/triggers/collection-launch - Trigger for new collection
- * - POST /api/triggers/scheduled-email - Regular interval emails
- * - POST /api/triggers/event - Event-based triggers
- * - POST /api/triggers/abandoned-cart - Cart abandonment alerts
- * - POST /api/triggers/product-update - Product update notifications
+ * Campaigns:
+ * - GET /api/campaigns - Fetch all campaigns
+ * - POST /api/campaigns - Create new campaign
+ * - PUT /api/campaigns/:id - Update campaign
+ * - DELETE /api/campaigns/:id - Delete campaign
+ * - POST /api/campaigns/:id/execute - Manually execute campaign
+ * - POST /api/campaigns/collection-launch - Campaign for new collection
+ * - POST /api/campaigns/scheduled-email - Regular interval emails
+ * - POST /api/campaigns/event - Event-based campaigns
+ * - POST /api/campaigns/abandoned-cart - Cart abandonment campaigns
+ * - POST /api/campaigns/product-update - Product update campaigns
  * 
  * Abandoned Carts:
  * - GET /api/carts/abandoned - Fetch abandoned carts (top 5 by default)

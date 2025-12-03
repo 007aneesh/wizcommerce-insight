@@ -15,7 +15,7 @@ import { toast } from "sonner";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Users, label: "Buyers", path: "/buyers" },
-  { icon: Zap, label: "Triggers", path: "/triggers" },
+  { icon: Zap, label: "Campaigns", path: "/triggers" },
   { icon: ShoppingCart, label: "Abandoned Carts", path: "/abandoned-carts" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: Bell, label: "Notifications", path: "/notifications" },

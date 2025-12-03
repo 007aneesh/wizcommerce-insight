@@ -111,7 +111,7 @@ export default function Dashboard() {
       color: "primary" 
     },
     { 
-      label: "Active Triggers", 
+      label: "Active Campaigns", 
       value: "23", 
       change: "+3", 
       icon: Zap, 
@@ -142,7 +142,7 @@ export default function Dashboard() {
             AI-Powered Sales Platform
           </h1>
           <p className="mb-6 text-lg opacity-90">
-            Manage buyers, triggers, and notifications all in one place
+            Manage buyers, campaigns, and notifications all in one place
           </p>
         </div>
         <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-white/10 to-transparent" />
@@ -158,7 +158,7 @@ export default function Dashboard() {
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                   <p className="mt-2 text-3xl font-bold">
-                    {isLoadingStats && (stat.label === "Active Buyers" || stat.label === "Abandoned Carts") ? (
+                    {isLoadingStats && (stat.label === "Active Buyers" || stat.label === "Abandoned Carts" || stat.label === "Active Campaigns") ? (
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     ) : (
                       stat.value
@@ -248,7 +248,7 @@ export default function Dashboard() {
             <div className="space-y-2">
               <Button variant="outline" className="w-full justify-start" size="sm" onClick={() => navigate("/triggers")}>
                 <Zap className="mr-2 h-4 w-4" />
-                Create New Trigger
+                Create New Campaign
               </Button>
               <Button variant="outline" className="w-full justify-start" size="sm" onClick={() => navigate("/buyers")}>
                 <Users className="mr-2 h-4 w-4" />

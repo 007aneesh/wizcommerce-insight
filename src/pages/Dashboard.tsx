@@ -20,6 +20,7 @@ const mockStats = [
 
 export default function Dashboard() {
   const [collections, setCollections] = useState<CollectionData[]>([]);
+  const [collections_count, setCollectionsCount] = useState<any>(0);
   const [isLoadingCollections, setIsLoadingCollections] = useState(false);
 
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function Dashboard() {
         const response = await apiClient.searchCollections(selectedCatalog.value);
         
         if (response.data) {
-          // Get recent collections (first 6)
+          setCollectionsCount(response.data.length);
           setCollections(response.data.slice(0, 6));
         }
       } catch (error) {
@@ -135,7 +136,7 @@ export default function Dashboard() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Total Collections</span>
-                <span className="font-semibold">{collections.length}</span>
+                <span className="font-semibold">{collections_count}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Active Catalog</span>

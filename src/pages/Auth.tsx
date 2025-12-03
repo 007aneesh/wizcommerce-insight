@@ -84,7 +84,6 @@ export default function Auth() {
     
     // Simulate API call
     setTimeout(() => {
-      console.log("Signup attempt:", { email, password });
       toast.success("Account created successfully!");
       setIsLoading(false);
       navigate("/");

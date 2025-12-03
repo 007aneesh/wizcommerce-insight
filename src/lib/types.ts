@@ -109,6 +109,102 @@ export interface OrderSearchResponse {
   [key: string]: unknown; // For other response fields
 }
 
+// Abandoned Cart Types
+export interface AbandonedCartFilterModel {
+  customer_name?: {
+    filterType: 'text';
+    type: 'contains';
+    filter: string;
+  };
+  [key: string]: unknown;
+}
+
+export interface AbandonedCartSearchRequest {
+  startRow: number;
+  endRow: number;
+  sortModel: SortModel[];
+  filterModel: AbandonedCartFilterModel;
+}
+
+export interface AbandonedCartData {
+  id: string;
+  tenant_id: string;
+  customer_name: string;
+  customer_id: string;
+  status: string;
+  cart_id: string;
+  cart_total: number;
+  document_id: string | null;
+  website_user_id: string;
+  comment: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+  created_at_milliseconds: number;
+  updated_at_milliseconds: number;
+  website_user_name: string;
+  website_user_email: string;
+  abandoned_cart_status: string;
+  website_user_phone: string;
+  total_skus: number;
+  total_units: number;
+  sales_reps: string[];
+  customer_info: {
+    label: string;
+    value: string;
+  };
+  website_user_info: {
+    label: string;
+    value: string;
+  };
+  [key: string]: unknown;
+}
+
+export interface AbandonedCartSearchResponse {
+  total: number;
+  data: AbandonedCartData[];
+  [key: string]: unknown;
+}
+
+// Cart Detail Types
+export interface CartDetailRequest {
+  cart_id: string;
+  reference_user_id: string;
+}
+
+export interface CartProduct {
+  id: string;
+  product_id?: string;
+  name: string;
+  sku: string;
+  price: number;
+  quantity: number;
+  units?: number;
+  image?: string;
+  image_url?: string;
+  inventory_status?: string;
+  stock?: number;
+  [key: string]: unknown;
+}
+
+export interface CartDetailResponse {
+  cart_id: string;
+  cart_total: number;
+  total_skus: number;
+  total_units: number;
+  status: string;
+  customer_name?: string;
+  website_user_name?: string;
+  website_user_email?: string;
+  website_user_phone?: string;
+  created_at?: string;
+  updated_at?: string;
+  products?: CartProduct[];
+  items?: CartProduct[];
+  [key: string]: unknown;
+}
+
 // Catalog Types
 export interface Catalog {
   value: string;

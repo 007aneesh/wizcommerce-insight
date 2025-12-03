@@ -10,21 +10,64 @@ import type { CollectionData } from "@/lib/types";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-// TODO: Replace with actual API data
-const mockStats = [
-  { label: "Active Buyers", value: "1,247", change: "+12.5%", icon: Users, color: "primary" },
-  { label: "Active Triggers", value: "23", change: "+3", icon: Zap, color: "secondary" },
-  { label: "Abandoned Carts", value: "156", change: "-8.2%", icon: ShoppingCart, color: "destructive" },
-  { label: "Notifications Sent", value: "4,892", change: "+23.1%", icon: Bell, color: "primary" },
-];
-
 export default function Dashboard() {
   const [collections, setCollections] = useState<CollectionData[]>([]);
   const [collections_count, setCollectionsCount] = useState<any>(0);
   const [isLoadingCollections, setIsLoadingCollections] = useState(false);
+  const [activeBuyersCount, setActiveBuyersCount] = useState<number | null>(null);
+  const [abandonedCartsCount, setAbandonedCartsCount] = useState<number | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   const navigate = useNavigate();
   const { selectedCatalog } = useCatalogStore();
+
+  // Fetch stats (buyers and abandoned carts counts)
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoadingStats(true);
+
+        // Fetch buyers count
+        try {
+          const buyersResponse = await apiClient.searchBuyers({
+            search: "",
+            filters: {
+              id: [],
+            },
+            sort: [],
+            aggregate: false,
+            page_number: 1,
+            page_size: 1,
+            exclude_ids: [],
+          });
+          setActiveBuyersCount(buyersResponse.data?.nbHits || 0);
+        } catch (error) {
+          console.error("Error fetching buyers count:", error);
+          setActiveBuyersCount(0);
+        }
+
+        // Fetch abandoned carts count
+        try {
+          const cartsResponse = await apiClient.searchAbandonedCarts({
+            startRow: 0,
+            endRow: 1,
+            sortModel: [],
+            filterModel: {},
+          });
+          setAbandonedCartsCount(cartsResponse.total || 0);
+        } catch (error) {
+          console.error("Error fetching abandoned carts count:", error);
+          setAbandonedCartsCount(0);
+        }
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   // Fetch collections
   useEffect(() => {
@@ -52,6 +95,44 @@ export default function Dashboard() {
     fetchCollections();
   }, [selectedCatalog]);
 
+  // Format number with commas
+  const formatNumber = (num: number | null) => {
+    if (num === null) return "—";
+    return num.toLocaleString();
+  };
+
+  // Stats configuration
+  const stats = [
+    { 
+      label: "Active Buyers", 
+      value: isLoadingStats ? "—" : formatNumber(activeBuyersCount), 
+      change: "", 
+      icon: Users, 
+      color: "primary" 
+    },
+    { 
+      label: "Active Triggers", 
+      value: "23", 
+      change: "+3", 
+      icon: Zap, 
+      color: "secondary" 
+    },
+    { 
+      label: "Abandoned Carts", 
+      value: isLoadingStats ? "—" : formatNumber(abandonedCartsCount), 
+      change: "", 
+      icon: ShoppingCart, 
+      color: "destructive" 
+    },
+    { 
+      label: "Notifications Sent", 
+      value: "4,892", 
+      change: "+23.1%", 
+      icon: Bell, 
+      color: "primary" 
+    },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -69,16 +150,23 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-      {mockStats.map((stat) => {
+        {stats.map((stat) => {
           const Icon = stat.icon;
-          const isCart = stat.label === "Abandoned Carts";
           return (
             <Card key={stat.label} className="p-6 transition-all hover:shadow-lg">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="mt-2 text-3xl font-bold">{stat.value}</p>
-                  <p className="mt-1 text-sm text-secondary">{stat.change}</p>
+                  <p className="mt-2 text-3xl font-bold">
+                    {isLoadingStats && (stat.label === "Active Buyers" || stat.label === "Abandoned Carts") ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    ) : (
+                      stat.value
+                    )}
+                  </p>
+                  {stat.change && (
+                    <p className="mt-1 text-sm text-secondary">{stat.change}</p>
+                  )}
                 </div>
                 <div className="rounded-lg bg-primary/10 p-3">
                   <Icon className="h-6 w-6 text-primary" />

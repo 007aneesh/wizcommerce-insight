@@ -7,6 +7,10 @@ import type {
   OrderSearchResponse,
   CatalogListResponse,
   CollectionSearchResponse,
+  AbandonedCartSearchRequest,
+  AbandonedCartSearchResponse,
+  CartDetailRequest,
+  CartDetailResponse,
 } from './types';
 
 interface LoginRequest {
@@ -106,6 +110,20 @@ const apiClient = {
   async searchCollections(catalogId: string): Promise<CollectionSearchResponse> {
     return request<CollectionSearchResponse>(`${ENDPOINTS.ENTITY.COLLECTION_SEARCH}?catalog_id=${catalogId}`, {
       method: 'GET',
+    });
+  },
+
+  async searchAbandonedCarts(payload: AbandonedCartSearchRequest): Promise<AbandonedCartSearchResponse> {
+    return request<AbandonedCartSearchResponse>(ENDPOINTS.CART.ABANDONED_CART_SEARCH, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getCartDetail(payload: CartDetailRequest): Promise<CartDetailResponse> {
+    return request<CartDetailResponse>(ENDPOINTS.CART.DETAIL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
   },
 };

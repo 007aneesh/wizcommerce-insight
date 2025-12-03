@@ -25,6 +25,10 @@ export const ENDPOINTS = {
     CATALOG_LIST: '/entity/v2/product/catalog_list',
     COLLECTION_SEARCH: '/entity/v3/collection/search',
   },
+  CART: {
+    ABANDONED_CART_SEARCH: '/cart/v3/abandoned_cart/search',
+    DETAIL: '/cart/v3/detail',
+  },
 } as const;
 
 export const getApiUrl = (endpoint: string): string => {

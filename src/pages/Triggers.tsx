@@ -70,7 +70,7 @@ const triggerTypes = [
   { id: "collection", label: "Collection Launch", icon: Package, color: "primary" },
   { id: "scheduled", label: "Scheduled Emails", icon: Calendar, color: "secondary" },
   { id: "event", label: "Event Triggers", icon: Zap, color: "primary" },
-  { id: "cart", label: "Abandoned Carts", icon: ShoppingCart, color: "destructive" },
+  { id: "cart", label: "Inventory Alerts", icon: ShoppingCart, color: "destructive" },
   { id: "product", label: "Product Updates", icon: Bell, color: "primary" },
 ];
 

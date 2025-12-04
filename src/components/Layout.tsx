@@ -34,12 +34,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-brand-purple-dark">
-              <span className="text-lg font-bold text-primary-foreground">W</span>
+              <img src="/logo.webp" alt="WizCommerce" width={40} height={40} className="object-contain rounded-sm" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-brand-purple-dark bg-clip-text text-transparent">
               WizCommerce

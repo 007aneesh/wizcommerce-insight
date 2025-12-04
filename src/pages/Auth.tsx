@@ -94,13 +94,13 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-purple/5 via-background to-brand-teal/5 p-4">
       <Card className="w-full max-w-md p-8">
         <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2">
-            <Zap className="h-6 w-6 text-primary" />
+          <div className="mb-4 inline-flex items-center gap-2 rounded-lg px-4 py-2">
+          <img src="/logo.webp" alt="WizCommerce" width={40} height={40} className="object-contain rounded-sm" />
             <span className="text-xl font-bold">WizCommerce</span>
           </div>
           <h1 className="text-2xl font-bold">Welcome Back</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to your account or create a new one
+            Sign in to your account
           </p>
         </div>
 

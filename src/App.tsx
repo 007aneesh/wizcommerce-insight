@@ -12,6 +12,7 @@ import Campaigns from "./pages/Campaigns";
 import AbandonedCarts from "./pages/AbandonedCarts";
 import Analytics from "./pages/Analytics";
 import Notifications from "./pages/Notifications";
+import Segments from "./pages/Segments";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -82,6 +83,16 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <Notifications />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/segments"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Segments />
                 </Layout>
               </ProtectedRoute>
             }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCatalogStore } from "@/store/catalogStore";
+import { useSegmentsStore } from "@/store/segmentsStore";
 import { apiClient, ApiError } from "@/lib/api";
 import type { CollectionData } from "@/lib/types";
 
@@ -94,7 +96,9 @@ export function CampaignConfigModal({ open, onOpenChange }: CampaignConfigModalP
   const [posterImagePreview, setPosterImagePreview] = useState<string>("");
 
   const { selectedCatalog } = useCatalogStore();
+  const { getBuyerSegments } = useSegmentsStore();
   const selectedCampaignType = campaignTypes.find((t) => t.id === selectedType);
+  const buyerSegments = getBuyerSegments();
 
   // Fetch collections when collection campaign is selected
   useEffect(() => {
@@ -506,11 +510,29 @@ export function CampaignConfigModal({ open, onOpenChange }: CampaignConfigModalP
                     <SelectContent>
                       <SelectItem value="all">All Buyers</SelectItem>
                       <SelectItem value="active">Active Buyers</SelectItem>
-                      <SelectItem value="vip">VIP Buyers</SelectItem>
-                      <SelectItem value="inactive">Inactive Buyers</SelectItem>
-                      <SelectItem value="custom">Custom Segment</SelectItem>
+                      {buyerSegments.length > 0 && (
+                        <>
+                          {buyerSegments.map((segment) => (
+                            <SelectItem key={segment.id} value={segment.id}>
+                              {segment.name}
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {buyerSegments.length === 0 && (
+                      <span>
+                        No custom segments available.{" "}
+                        <Link to="/segments" className="text-primary hover:underline">
+                          Create segments
+                        </Link>{" "}
+                        to target specific buyer groups.
+                      </span>
+                    )}
+                    {buyerSegments.length > 0 && "Select a custom buyer segment or use default options"}
+                  </p>
                 </div>
               </div>
 

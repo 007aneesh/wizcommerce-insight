@@ -7,7 +7,8 @@ import {
   Zap, 
   TrendingUp, 
   ShoppingCart,
-  LogOut
+  LogOut,
+  Layers
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Users, label: "Buyers", path: "/buyers" },
   { icon: Zap, label: "Campaigns", path: "/triggers" },
+  { icon: Layers, label: "Segments", path: "/segments" },
   { icon: ShoppingCart, label: "Abandoned Carts", path: "/abandoned-carts" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: Bell, label: "Notifications", path: "/notifications" },

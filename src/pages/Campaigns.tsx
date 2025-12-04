@@ -13,12 +13,14 @@ import {
   Package, 
   Bell,
   AlertCircle,
-  Clock
+  Clock,
+  Filter
 } from "lucide-react";
 import { CampaignConfigModal } from "@/components/CampaignConfigModal";
+import { CampaignEditModal } from "@/components/CampaignEditModal";
 
 // TODO: Replace with actual API data
-const mockCampaigns = [
+const initialMockCampaigns = [
   {
     id: 1,
     name: "New Collection Launch",
@@ -27,6 +29,11 @@ const mockCampaigns = [
     description: "Notify buyers when new collections are launched",
     lastTriggered: "2 hours ago",
     emailCount: 156,
+    config: {
+      collection_id: "",
+      base_prompt: "Introduce the new collection to buyers...",
+      target_segment: "all",
+    },
   },
   {
     id: 2,
@@ -36,15 +43,25 @@ const mockCampaigns = [
     description: "Send weekly updates to all active buyers",
     lastTriggered: "3 days ago",
     emailCount: 1247,
+    config: {
+      frequency: "weekly",
+      schedule: "09:00",
+      target_segment: "active",
+    },
   },
   {
     id: 3,
     name: "Event Notifications",
     type: "event",
-    status: "active",
+    status: "inactive",
     description: "Send personalized emails based on specific buyer events",
     lastTriggered: "1 hour ago",
     emailCount: 89,
+    config: {
+      event_type: "price_drop",
+      conditions: '{"price_threshold": 50}',
+      target_segment: "all",
+    },
   },
   {
     id: 4,
@@ -54,15 +71,26 @@ const mockCampaigns = [
     description: "Alert buyers when items in their cart are low stock",
     lastTriggered: "30 minutes ago",
     emailCount: 45,
+    config: {
+      delay: "24",
+      stock_threshold: "5",
+      min_cart_value: "50",
+      target_segment: "all",
+    },
   },
   {
     id: 5,
     name: "Product Update Notifications",
     type: "product",
-    status: "active",
+    status: "inactive",
     description: "Notify buyers when watched products are updated",
     lastTriggered: "5 hours ago",
     emailCount: 234,
+    config: {
+      product_ids: "",
+      update_types: "all",
+      target_segment: "all",
+    },
   },
 ];
 
@@ -77,11 +105,41 @@ const campaignTypes = [
 export default function Campaigns() {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
+  const [campaigns, setCampaigns] = useState(initialMockCampaigns);
 
-  const filteredCampaigns =
-    selectedType === "all"
-      ? mockCampaigns
-      : mockCampaigns.filter((c) => c.type === selectedType);
+  // Filter campaigns by type and active status
+  const filteredCampaigns = campaigns.filter((c) => {
+    const typeMatch = selectedType === "all" || c.type === selectedType;
+    const activeMatch = !showActiveOnly || c.status === "active";
+    return typeMatch && activeMatch;
+  });
+
+  const handleStatusToggle = (campaignId: number | string, checked: boolean) => {
+    setCampaigns((prev) =>
+      prev.map((campaign) =>
+        campaign.id === campaignId
+          ? { ...campaign, status: checked ? "active" : "inactive" }
+          : campaign
+      )
+    );
+    // TODO: API Integration - Update campaign status
+    // await apiClient.updateCampaignStatus(campaignId, checked ? "active" : "inactive");
+  };
+
+  const handleConfigureClick = (campaign: any) => {
+    setSelectedCampaign(campaign);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateSuccess = () => {
+    // Refresh campaigns list after update
+    // TODO: Fetch updated campaigns from API
+    setIsEditModalOpen(false);
+    setSelectedCampaign(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -101,7 +159,33 @@ export default function Campaigns() {
 
       {/* Campaign Type Filters */}
       <Card className="p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Filter Campaigns</h2>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Show active only</span>
+            </div>
+            <Switch
+              checked={showActiveOnly}
+              onCheckedChange={setShowActiveOnly}
+            />
+          </div>
+        </div>
         <div className="grid gap-4 md:grid-cols-5">
+          <button
+            onClick={() => setSelectedType("all")}
+            className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all hover:shadow-md ${
+              selectedType === "all"
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <div className="rounded-lg bg-primary/10 p-3">
+              <Zap className="h-6 w-6 text-primary" />
+            </div>
+            <span className="text-sm font-medium">All Types</span>
+          </button>
           {campaignTypes.map((type) => {
             const Icon = type.icon;
             return (
@@ -126,45 +210,73 @@ export default function Campaigns() {
 
       {/* Active Campaigns List */}
       <div className="space-y-4">
-        {/* TODO: API Integration Point - Replace mockCampaigns with actual API call */}
-        {/* Example: const { data: campaigns } = useQuery('campaigns', fetchCampaigns) */}
-        {filteredCampaigns.map((campaign) => (
-          <Card key={campaign.id} className="p-6 transition-all hover:shadow-lg">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="mb-2 flex items-center gap-3">
-                  <h3 className="text-xl font-semibold">{campaign.name}</h3>
-                  <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
-                    {campaign.status}
-                  </Badge>
-                </div>
-                <p className="mb-4 text-sm text-muted-foreground">{campaign.description}</p>
-
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      Last sent: {campaign.lastTriggered}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      {campaign.emailCount} emails sent
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Switch checked={campaign.status === "active"} />
-                <Button variant="outline" size="sm">
-                  Configure
-                </Button>
-              </div>
-            </div>
+        {filteredCampaigns.length === 0 ? (
+          <Card className="p-12 text-center">
+            <AlertCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">No campaigns found</h3>
+            <p className="text-sm text-muted-foreground">
+              {showActiveOnly && selectedType !== "all"
+                ? "No active campaigns of this type"
+                : showActiveOnly
+                ? "No active campaigns"
+                : "Try adjusting your filters"}
+            </p>
           </Card>
-        ))}
+        ) : (
+          filteredCampaigns.map((campaign) => (
+            <Card key={campaign.id} className="p-6 transition-all hover:shadow-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="mb-2 flex items-center gap-3">
+                    <h3 className="text-xl font-semibold">{campaign.name}</h3>
+                    <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
+                      {campaign.status}
+                    </Badge>
+                  </div>
+                  <p className="mb-4 text-sm text-muted-foreground">{campaign.description}</p>
+
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        Last sent: {campaign.lastTriggered}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        {campaign.emailCount} emails sent
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {campaign.status === "active" ? "Active" : "Inactive"}
+                      </span>
+                      <Switch 
+                        checked={campaign.status === "active"} 
+                        onCheckedChange={(checked) => handleStatusToggle(campaign.id, checked)}
+                      />
+                    </div>
+                    {campaign.status === "active" && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleConfigureClick(campaign)}
+                      >
+                        Configure
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* API Integration Notice */}
@@ -251,6 +363,14 @@ export default function Campaigns() {
 
       {/* Campaign Configuration Modal */}
       <CampaignConfigModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      
+      {/* Campaign Edit Modal */}
+      <CampaignEditModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        campaign={selectedCampaign}
+        onUpdate={handleUpdateSuccess}
+      />
     </div>
   );
 }

@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Table, 
   TableBody, 
@@ -11,7 +12,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { ShoppingCart, Search, Loader2, Eye } from "lucide-react";
+import { ShoppingCart, Search, Loader2, Eye, Send } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api";
 import type { AbandonedCartData, AbandonedCartSearchResponse } from "@/lib/types";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -29,6 +30,8 @@ export default function AbandonedCarts() {
   const [total, setTotal] = useState(0);
   const [selectedCart, setSelectedCart] = useState<AbandonedCartData | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedCartIds, setSelectedCartIds] = useState<Set<string>>(new Set());
+  const [isSendingReminders, setIsSendingReminders] = useState(false);
   
   const debouncedSearch = useDebounce(searchQuery, 500);
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -64,6 +67,8 @@ export default function AbandonedCarts() {
 
       if (reset) {
         setCarts(response.data || []);
+        // Clear selections when filters change or data is reset
+        setSelectedCartIds(new Set());
       } else {
         setCarts((prev) => [...prev, ...(response.data || [])]);
       }
@@ -146,6 +151,106 @@ export default function AbandonedCarts() {
     setIsDrawerOpen(true);
   };
 
+  // Check if all visible carts are selected
+  const areAllVisibleCartsSelected = useMemo(() => {
+    if (carts.length === 0) return false;
+    return carts.every(cart => selectedCartIds.has(cart.id));
+  }, [carts, selectedCartIds]);
+
+  // Check if some (but not all) visible carts are selected (for indeterminate state)
+  const areSomeVisibleCartsSelected = useMemo(() => {
+    if (carts.length === 0) return false;
+    const selectedCount = carts.filter(cart => selectedCartIds.has(cart.id)).length;
+    return selectedCount > 0 && selectedCount < carts.length;
+  }, [carts, selectedCartIds]);
+
+  // Determine checkbox state for select all
+  const selectAllChecked: boolean | "indeterminate" = areAllVisibleCartsSelected 
+    ? true 
+    : areSomeVisibleCartsSelected 
+    ? "indeterminate" 
+    : false;
+
+  // Handle individual cart selection
+  const handleCartSelect = (cartId: string, checked: boolean) => {
+    setSelectedCartIds(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(cartId);
+      } else {
+        newSet.delete(cartId);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle select all
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // Select all visible carts
+      setSelectedCartIds(prev => {
+        const newSet = new Set(prev);
+        carts.forEach(cart => newSet.add(cart.id));
+        return newSet;
+      });
+    } else {
+      // Deselect all visible carts
+      setSelectedCartIds(prev => {
+        const newSet = new Set(prev);
+        carts.forEach(cart => newSet.delete(cart.id));
+        return newSet;
+      });
+    }
+  };
+
+  // Handle send reminders to selected carts
+  const handleSendReminders = async () => {
+    if (selectedCartIds.size === 0) {
+      toast.error("Please select at least one cart");
+      return;
+    }
+
+    try {
+      setIsSendingReminders(true);
+      const selectedCarts = carts.filter(cart => selectedCartIds.has(cart.id));
+      
+      // TODO: Implement batch reminder API call
+      // For now, simulate sending reminders
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const cart of selectedCarts) {
+        try {
+          // TODO: Replace with actual API call
+          // await apiClient.sendCartReminder({ cart_id: cart.cart_id, reference_user_id: cart.created_by });
+          await new Promise(resolve => setTimeout(resolve, 100)); // Simulate API call
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          console.error(`Failed to send reminder for cart ${cart.id}:`, error);
+        }
+      }
+
+      if (errorCount === 0) {
+        toast.success(`Successfully sent reminders to ${successCount} cart${successCount !== 1 ? 's' : ''}`);
+        setSelectedCartIds(new Set());
+      } else if (successCount > 0) {
+        toast.warning(`Sent reminders to ${successCount} cart${successCount !== 1 ? 's' : ''}, but ${errorCount} failed`);
+      } else {
+        toast.error(`Failed to send reminders to ${errorCount} cart${errorCount !== 1 ? 's' : ''}`);
+      }
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message || "Failed to send reminders");
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+      console.error("Error sending reminders:", error);
+    } finally {
+      setIsSendingReminders(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -156,20 +261,7 @@ export default function AbandonedCarts() {
         </p>
       </div>
 
-      {/* Summary Card */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Total Abandoned Carts</p>
-            <p className="mt-2 text-3xl font-bold">{total}</p>
-          </div>
-          <div className="rounded-lg bg-destructive/10 p-3">
-            <ShoppingCart className="h-6 w-6 text-destructive" />
-          </div>
-        </div>
-      </Card>
 
-      {/* Filter Input */}
       <Card className="p-4">
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
@@ -181,11 +273,33 @@ export default function AbandonedCarts() {
               className="pl-10"
             />
           </div>
+          
+          {selectedCartIds.size > 0 && (
+            <Button
+              onClick={handleSendReminders}
+              disabled={isSendingReminders}
+              className="gap-2"
+            >
+              {isSendingReminders ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Send Reminder ({selectedCartIds.size})
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </Card>
 
-      {/* Table */}
-      <Card>
+      <div className="text-sm text-muted-foreground my-0">
+            Showing {total} abandoned carts
+      </div>
+      <Card className="!mt-3">
         {isLoading && carts.length === 0 ? (
           <div className="flex items-center justify-center p-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -204,6 +318,13 @@ export default function AbandonedCarts() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectAllChecked}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all carts"
+                    />
+                  </TableHead>
                   <TableHead>Customer Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Cart Total</TableHead>
@@ -216,6 +337,13 @@ export default function AbandonedCarts() {
               <TableBody>
                 {carts.map((cart) => (
                   <TableRow key={cart.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedCartIds.has(cart.id)}
+                        onCheckedChange={(checked) => handleCartSelect(cart.id, checked as boolean)}
+                        aria-label={`Select cart for ${cart.website_user_name || cart.customer_name}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">
                       {cart.website_user_name || cart.customer_name}
                     </TableCell>

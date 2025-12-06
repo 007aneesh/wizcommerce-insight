@@ -9,6 +9,7 @@ import { apiClient, ApiError } from "@/lib/api";
 import type { CollectionData } from "@/lib/types";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import fazzaImage from "@/assets/fazza.jpg";
 
 export default function Dashboard() {
   const [collections, setCollections] = useState<CollectionData[]>([]);
@@ -137,13 +138,22 @@ export default function Dashboard() {
     <div className="space-y-8">
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-purple to-brand-purple-dark p-8 text-primary-foreground">
-        <div className="relative z-10">
-          <h1 className="mb-2 text-4xl font-bold">
-            AI-Powered Sales Platform
-          </h1>
-          <p className="mb-6 text-lg opacity-90">
-            Manage buyers, campaigns, and notifications all in one place
-          </p>
+        <div className="flex items-center justify-between">
+          <div className="relative z-10 flex-1">
+            <h1 className="mb-2 text-4xl font-bold">
+              Hi, I'm Fazza
+            </h1>
+            <p className="mb-6 text-xl opacity-90">
+              Your AI-Powered Marketing and Engagement Companion
+            </p>
+          </div>
+          <div className="relative z-10 hidden md:block">
+            <img 
+              src={fazzaImage} 
+              alt="Fazza - AI Marketing Companion" 
+              className="h-48 w-48 rounded-full object-cover border-4 border-white/20 shadow-2xl"
+            />
+          </div>
         </div>
         <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-white/10 to-transparent" />
       </div>

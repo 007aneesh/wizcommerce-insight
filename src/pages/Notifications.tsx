@@ -134,29 +134,6 @@ export default function Notifications() {
         ))}
       </div>
 
-      {/* API Integration Notice */}
-      <Card className="border-dashed bg-muted/30 p-6">
-        <div className="flex items-start gap-4">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <Bell className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h3 className="mb-2 font-semibold">Notification System Integration</h3>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Connect your email service to track sent notifications and manage delivery status.
-            </p>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p className="font-semibold">Required Endpoints:</p>
-              <ul className="space-y-1">
-                <li>• GET /api/notifications - Fetch notification history</li>
-                <li>• POST /api/notifications/send - Send manual notification</li>
-                <li>• GET /api/notifications/:id/status - Check delivery status</li>
-                <li>• GET /api/notifications/stats - Get notification statistics</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }

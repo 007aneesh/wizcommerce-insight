@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Zap, 
   Plus, 
@@ -278,88 +277,6 @@ export default function Campaigns() {
           ))
         )}
       </div>
-
-      {/* API Integration Notice */}
-      <Card className="border-dashed bg-muted/30 p-6">
-        <div className="flex items-start gap-4">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <AlertCircle className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h3 className="mb-2 font-semibold">API Integration Required</h3>
-            <p className="mb-4 text-sm text-muted-foreground">
-              To enable these campaigns, configure the following endpoints:
-            </p>
-            <ul className="space-y-1 text-sm text-muted-foreground">
-              <li>• POST /api/campaigns/collection-launch - New collection campaigns</li>
-              <li>• POST /api/campaigns/scheduled - Regular interval campaigns</li>
-              <li>• POST /api/campaigns/event - Event-based campaigns</li>
-              <li>• POST /api/campaigns/abandoned-cart - Cart abandonment campaigns</li>
-              <li>• POST /api/campaigns/product-update - Product update campaigns</li>
-            </ul>
-          </div>
-        </div>
-      </Card>
-
-      {/* Campaign Configuration Details */}
-      <Card className="p-6">
-        <h2 className="mb-4 text-xl font-semibold">Campaign Configuration Details</h2>
-        <Tabs defaultValue="requirements" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="requirements">Data Requirements</TabsTrigger>
-            <TabsTrigger value="endpoints">API Endpoints</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="requirements" className="pt-4">
-            <div className="space-y-4">
-              <div className="rounded-lg border border-border p-4">
-                <h3 className="mb-2 font-semibold">Required Buyer Data Fields:</h3>
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>• Buyer name/company name</li>
-                  <li>• Past orders (50-100 line items)</li>
-                  <li>• Product preferences/watch list</li>
-                  <li>• Notification preferences</li>
-                  <li>• Abandoned cart items</li>
-                  <li>• Best seller preferences per buyer</li>
-                </ul>
-              </div>
-
-              <div className="rounded-lg border border-border p-4">
-                <h3 className="mb-2 font-semibold">Event Campaign Data:</h3>
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>• Event type (collection launch, stock update, price change)</li>
-                  <li>• Product/collection IDs affected</li>
-                  <li>• Timestamp</li>
-                  <li>• Related buyer IDs to notify</li>
-                </ul>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="endpoints" className="pt-4">
-            <div className="space-y-3">
-              <div className="rounded-lg border border-border p-4">
-                <code className="text-sm text-primary">POST /api/campaigns/execute</code>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Execute a specific campaign by ID
-                </p>
-              </div>
-              <div className="rounded-lg border border-border p-4">
-                <code className="text-sm text-primary">GET /api/buyers/:id/preferences</code>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Fetch buyer notification preferences
-                </p>
-              </div>
-              <div className="rounded-lg border border-border p-4">
-                <code className="text-sm text-primary">POST /api/notifications/send</code>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Send notification to specific buyers
-                </p>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </Card>
 
       {/* Campaign Configuration Modal */}
       <CampaignConfigModal open={isModalOpen} onOpenChange={setIsModalOpen} />

@@ -151,7 +151,7 @@ export default function Dashboard() {
             <img 
               src={fazzaImage} 
               alt="Fazza - AI Marketing Companion" 
-              className="h-48 w-48 rounded-full object-cover border-4 border-white/20 shadow-2xl"
+              className="h-48 w-48 rounded-full object-cover object-top border-4 border-white/20 shadow-2xl"
             />
           </div>
         </div>
